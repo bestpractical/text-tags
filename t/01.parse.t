@@ -1,0 +1,55 @@
+use Test::More tests => 50;
+
+BEGIN { use_ok 'Text::Tags::Parser' }
+
+my $parser = Text::Tags::Parser->new;
+isa_ok($parser, 'Text::Tags::Parser');
+
+is_deeply( [ $parser->parse_tags('')], []);
+is_deeply( [ $parser->parse_tags('foo')], ['foo']);
+is_deeply( [ $parser->parse_tags(' foo')], ['foo']);
+is_deeply( [ $parser->parse_tags('   foo')], ['foo']);
+is_deeply( [ $parser->parse_tags("\t foo")], ['foo']);
+is_deeply( [ $parser->parse_tags('foo   ')], ['foo']);
+is_deeply( [ $parser->parse_tags('  foo   ')], ['foo']);
+is_deeply( [ $parser->parse_tags('  foo   bar  ')], ['foo', 'bar']);
+is_deeply( [ $parser->parse_tags('  foo bar  ')], ['foo', 'bar']);
+is_deeply( [ $parser->parse_tags('  foo       bar     baz ')], ['foo', 'bar', 'baz']);
+is_deeply( [ $parser->parse_tags('  "foo"       bar     baz ')], ['foo', 'bar', 'baz']);
+is_deeply( [ $parser->parse_tags(q{  "foo"       bar     'baz' })], ['foo', 'bar', 'baz']);
+is_deeply( [ $parser->parse_tags(q{  "foo"       bar     'baz})], ['foo', 'bar', 'baz']);
+is_deeply( [ $parser->parse_tags(q{  "foo"       bar     "baz})], ['foo', 'bar', 'baz']);
+is_deeply( [ $parser->parse_tags(q{  "f\\"oo"       bar     "baz})], [q(f\\), q(oo"), q(bar), q(baz)]);
+is_deeply( [ $parser->parse_tags(q{  "f'oo"       bar     "baz})], [q(f'oo), q(bar), q(baz)]);
+is_deeply( [ $parser->parse_tags(q{I've       bar     "baz})], [q(I've), q(bar), q(baz)]);
+is_deeply( [ $parser->parse_tags(q{"eep"bap})], [ qw/eep bap/ ]);
+is_deeply( [ $parser->parse_tags(q{"eep"'bap'})], [ qw/eep bap/ ]);
+is_deeply( [ $parser->parse_tags(q{"eep""bap"})], [ qw/eep bap/ ]);
+is_deeply( [ $parser->parse_tags(q{ a'b"c   })], [ q/a'b"c/ ]);
+is_deeply( [ $parser->parse_tags(q{ a' bla  })], [ q/a'/, q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ a" bla  })], [ q/a"/, q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ "'a" bla  })], [ q/'a/, q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ '"a' bla  })], [ q/"a/, q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ "a bla  })], [ q/a bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ "" bla  })], [ q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ '' bla  })], [ q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ ""'' bla  })], [ q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ """" bla  })], [ q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ bla """" })], [ q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ bla '' })], [ q/bla/ ]);
+is_deeply( [ $parser->parse_tags(q{ bla '' '' baz "" })], [ q/bla/, q/baz/ ]);
+is_deeply( [ $parser->parse_tags(q{  "foo bar"  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  "foo     bar"  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  "foo bar  "  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  "   foo bar  "  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  'foo bar'  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  'foo     bar'  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  'foo bar  '  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(q{  '   foo bar  '  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(qq{  ' \t  foo bar  '  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(qq{  '   foo  \n bar  '  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(qq{  '   foo bar \n  '  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(qq{  '   foo  \t  \n\n \r  bar  '  })], ['foo bar']);
+is_deeply( [ $parser->parse_tags(qq{ foo bar foo   })], [qw[foo bar]]);
+is_deeply( [ $parser->parse_tags(qq{ foo foo foo    bar foo   })], [qw[foo bar]]);
+is_deeply( [ $parser->parse_tags(qq{ "foo bar" "   foo  bar    " 'foo  bar   ' baz   })], ["foo bar", "baz"]);
