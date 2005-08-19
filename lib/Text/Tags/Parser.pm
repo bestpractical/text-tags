@@ -6,36 +6,40 @@ use strict;
 sub new {
     my $class = shift;
     bless {}, $class;
-} 
+}
 
 sub parse_tags {
-    my $self = shift;
+    my $self   = shift;
     my $string = shift;
 
     my @tags;
     my %seen;
-   
+
     # In this regexp, exactly one paren-group matches.
     # Thus it can be accessed as $+
-    while ($string =~ /\G \s* (?:
+    while (
+        $string =~ /\G \s* (?:
                          " ([^"]*) (?: " | $) |      # double-quoted string
                          ' ([^']*) (?: ' | $) |      # single-quoted string
 			 (\S+)                       # other 
-		     )/gx) {
-	my $tag = $+;
+		     )/gx
+        )
+    {
+        my $tag = $+;
 
-	# shed explictly quoted empty strings
-	next unless length $tag;
+        # shed explictly quoted empty strings
+        next unless length $tag;
 
-	$tag =~ s/^\s+//; $tag =~ s/\s+$//;
-	$tag =~ s/\s+/ /g;
-	
-	# Tags should be unique, but in the right order
-	push @tags, $tag unless $seen{$tag}++;
-    } 
+        $tag =~ s/^\s+//;
+        $tag =~ s/\s+$//;
+        $tag =~ s/\s+/ /g;
+
+        # Tags should be unique, but in the right order
+        push @tags, $tag unless $seen{$tag}++;
+    }
 
     return @tags;
-} 
+}
 
 sub join_tags {
     my $self = shift;
@@ -45,60 +49,67 @@ sub join_tags {
     my @quoted_tags;
 
     for my $tag (@tags) {
-	$tag =~ s/^\s+//; $tag =~ s/\s+$//;
-	$tag =~ s/\s+/ /g;
+        $tag =~ s/^\s+//;
+        $tag =~ s/\s+$//;
+        $tag =~ s/\s+/ /g;
 
-	next unless length $tag;
+        next unless length $tag;
 
-	my $quote;
+        my $quote;
 
-	if ($tag =~ /"/ and $tag =~ /'/) {
-	    # This *could* be an illegal tag.
+        if ( $tag =~ /"/ and $tag =~ /'/ ) {
 
-	    if ($tag =~ /^['"]/ or $tag =~/ /) {
-		# Yup, it's illegal
-		$tag =~ tr/"/'/;
-		$quote = q(");
-	    } else {
-		# It has quotes in the inside, but no spaces or at the
-		# front, so just leave it unquoted.
-		$quote = q();
-	    } 
-	} elsif ($tag =~ /"/) {
-	    # It contains a ", so either it needs to be unquoted or single-quoted
-	    if ($tag =~ / / or $tag =~ /^"/) {
-		$quote = q(');
-	    } else {
-		$quote = q();
-	    } 
-	} elsif ($tag =~ /'/) {
-	    # It contains a ', so either it needs to be unquoted or double-quoted
-	    if ($tag =~ / / or $tag =~ /^'/) {
-		$quote = q(");
-	    } else {
-		$quote = q();
-	    } 
-	} elsif ($tag =~ / /) {
-	    # By this point we know that it contains no quotes.
-	    $quote = q(");
-	} else {
-	    # No special characters at all!
-	    $quote = q();
-	} 
+            # This *could* be an illegal tag.
 
-	# $tag is now fully normalized (both by whitespace and by anti-illegalization).
-	# Have we seen it?
+            if ( $tag =~ /^['"]/ or $tag =~ / / ) {
 
-	next if $seen{$tag}++;
+                # Yup, it's illegal
+                $tag =~ tr/"/'/;
+                $quote = q(");
+            } else {
 
-	push @quoted_tags, "$quote$tag$quote";
-    } 
+                # It has quotes in the inside, but no spaces or at the
+                # front, so just leave it unquoted.
+                $quote = q();
+            }
+        } elsif ( $tag =~ /"/ ) {
+
+         # It contains a ", so either it needs to be unquoted or single-quoted
+            if ( $tag =~ / / or $tag =~ /^"/ ) {
+                $quote = q(');
+            } else {
+                $quote = q();
+            }
+        } elsif ( $tag =~ /'/ ) {
+
+         # It contains a ', so either it needs to be unquoted or double-quoted
+            if ( $tag =~ / / or $tag =~ /^'/ ) {
+                $quote = q(");
+            } else {
+                $quote = q();
+            }
+        } elsif ( $tag =~ / / ) {
+
+            # By this point we know that it contains no quotes.
+            $quote = q(");
+        } else {
+
+            # No special characters at all!
+            $quote = q();
+        }
+
+# $tag is now fully normalized (both by whitespace and by anti-illegalization).
+# Have we seen it?
+
+        next if $seen{$tag}++;
+
+        push @quoted_tags, "$quote$tag$quote";
+    }
 
     return join ' ', @quoted_tags;
-} 
+}
 
-
-1; # Magic true value required at end of module
+1;    # Magic true value required at end of module
 __END__
 
 =head1 NAME
