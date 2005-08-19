@@ -14,6 +14,6 @@ is($parser->join_tags('foo', 'fo"o   bar'), q{foo 'fo"o bar'});
 is($parser->join_tags('beep', 'fo"r'), q{beep fo"r});
 is($parser->join_tags(q{"Foo's"}), q{"'Foo's'"});
 is($parser->join_tags(q{Bob "Foo's"}), q{"Bob 'Foo's'"});
-is($parser->join_tags(q{a'b"c}, 'bla'), q{a'b"c bla});
+is($parser->join_tags(q{a'b"c}, 'bla'), q{"a'b'c" bla});
 is($parser->join_tags(q{ab"c  bah}, 'bla'), q{'ab"c bah' bla});
 is($parser->join_tags(q{ab'c  bah}, 'bla'), q{"ab'c bah" bla});
