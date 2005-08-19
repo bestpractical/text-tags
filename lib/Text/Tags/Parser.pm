@@ -26,7 +26,7 @@ sub parse_tags {
 		     )/gx
         )
     {
-        my $tag = $+;
+        my $tag       = $+;
         my $is_quoted = $1 || $3;
 
         # shed explictly quoted empty strings
@@ -60,11 +60,13 @@ sub join_tags {
         my $quote;
 
         if ( $tag =~ /"/ and $tag =~ /'/ ) {
+
             # This is an illegal tag.  Normalize to just single-quotes.
             # Quote it too, though technically the new form might not need it.
             $tag =~ tr/"/'/;
             $quote = q{"};
         } elsif ( $tag =~ /"/ ) {
+
             # It contains a ", so either it needs to be unquoted or
             # single-quoted
             if ( $tag =~ / / or $tag =~ /,/ or $tag =~ /^"/ ) {
@@ -73,6 +75,7 @@ sub join_tags {
                 $quote = q{};
             }
         } elsif ( $tag =~ /'/ ) {
+
             # It contains a ', so either it needs to be unquoted or
             # double-quoted
             if ( $tag =~ / / or $tag =~ /,/ or $tag =~ /^'/ ) {
@@ -81,10 +84,12 @@ sub join_tags {
                 $quote = q{};
             }
         } elsif ( $tag =~ /[ ,]/ ) {
+
             # By this point we know that it contains no quotes.
             # But it needs to be quoted.
             $quote = q{"};
         } else {
+
             # No special characters at all!
             $quote = q{};
         }
