@@ -46,6 +46,19 @@ sub parse_tags {
 sub join_tags {
     my $self = shift;
     my @tags = @_;
+    return $self->_join_tags(undef, @tags);
+}
+
+sub join_quoted_tags {
+    my $self = shift;
+    my @tags = @_;
+    return $self->_join_tags(1, @tags);
+}
+
+sub _join_tags {
+    my $self = shift;
+    my $always_quote = shift;
+    my @tags = @_;
 
     my %seen;
     my @quoted_tags;
@@ -69,7 +82,7 @@ sub join_tags {
 
             # It contains a ", so either it needs to be unquoted or
             # single-quoted
-            if ( $tag =~ / / or $tag =~ /,/ or $tag =~ /^"/ ) {
+            if ( $tag =~ / / or $tag =~ /,/ or $tag =~ /^"/ or $always_quote) {
                 $quote = q{'};
             } else {
                 $quote = q{};
@@ -78,12 +91,12 @@ sub join_tags {
 
             # It contains a ', so either it needs to be unquoted or
             # double-quoted
-            if ( $tag =~ / / or $tag =~ /,/ or $tag =~ /^'/ ) {
+            if ( $tag =~ / / or $tag =~ /,/ or $tag =~ /^'/ or $always_quote) {
                 $quote = q{"};
             } else {
                 $quote = q{};
             }
-        } elsif ( $tag =~ /[ ,]/ ) {
+        } elsif ( $tag =~ /[ ,]/ or $always_quote) {
 
             # By this point we know that it contains no quotes.
             # But it needs to be quoted.
@@ -120,28 +133,31 @@ Text::Tags::Parser - parses "folksonomy" space-separated tags
   
 =head1 DESCRIPTION
 
-Parses "folksonomies", which are simple space-or-comma-separated-but-optionally-quoted tag lists.
+Parses "folksonomies", which are simple
+space-or-comma-separated-but-optionally-quoted tag lists.
 
-Specifically, tags can be any string, as long as they don't contain both a
-single and a double quote.  Hopefully, this is a pretty obscure restriction.  In
-addition, all whitespace inside tags is normalized to a single space (with no
-leading or trailing whitespace).  
+Specifically, tags can be any string, as long as they don't contain
+both a single and a double quote.  Hopefully, this is a pretty obscure
+restriction.  In addition, all whitespace inside tags is normalized to
+a single space (with no leading or trailing whitespace).
 
-In a tag list string, tags can optionally be quoted with either single or double
-quotes.  B<There is no escaping of either kind of quote>, although you can
-include one type of quote inside a string quoted with the other.  Quotes can
-also just be included inside tags, as long as they aren't at the beginning; thus
-a tag like C<joe's> can just be entered without any extra quoting.  Tags are
-separated by whitespace and/or commas, though quoted tags can run into each
-other without whitespace.  Empty tags (put in explicitly with C<""> or C<''>)
-are ignored.  (Note that commas are not normalized with whitespace, and can be
-included in a tag if you quote them.)
+In a tag list string, tags can optionally be quoted with either single
+or double quotes.  B<There is no escaping of either kind of quote>,
+although you can include one type of quote inside a string quoted with
+the other.  Quotes can also just be included inside tags, as long as
+they aren't at the beginning; thus a tag like C<joe's> can just be
+entered without any extra quoting.  Tags are separated by whitespace
+and/or commas, though quoted tags can run into each other without
+whitespace.  Empty tags (put in explicitly with C<""> or C<''>) are
+ignored.  (Note that commas are not normalized with whitespace, and
+can be included in a tag if you quote them.)
 
-Why did the previous paragraph need to be so detailed?  Because L<Text::Tags::Parser> 
-B<always successfully parses> every line.  That is, every single tags line converts into
-a list of tags, without any error conditions.  For general use, you can just understand the
-rules as being B<separate tags with spaces or commas, and put either kind of quotes around tags that
-need to have spaces>.
+Why did the previous paragraph need to be so detailed?  Because
+L<Text::Tags::Parser> B<always successfully parses> every line.  That
+is, every single tags line converts into a list of tags, without any
+error conditions.  For general use, you can just understand the rules
+as being B<separate tags with spaces or commas, and put either kind of
+quotes around tags that need to have spaces>.
 
 =head1 METHODS
 
@@ -149,20 +165,28 @@ need to have spaces>.
 
 =item B<new>
 
-Creates a new L<Text::Tags::Parser> object.  In this version of the module, the objects
-do not actually hold any state, but this could change in a future version.
+Creates a new L<Text::Tags::Parser> object.  In this version of the
+module, the objects do not actually hold any state, but this could
+change in a future version.
 
 =item B<parse_tags>($string)
 
-Given a tag list string, returns a list of tags (unquoted) using the rules described 
-above.
-Any given tag will show up at most once in the output list.
+Given a tag list string, returns a list of tags (unquoted) using the
+rules described above.  Any given tag will show up at most once in the
+output list.
 
 =item B<join_tags>(@tags)
 
-Given a list of tags, returns a tag list string containing them (appropriately quoted).
-Note that illegal tags will have all of their double quotes converted to single quotes.
-Any given tag will show up at most once in the output string.
+Given a list of tags, returns a tag list string containing them
+(appropriately quoted).  Note that illegal tags will have all of their
+double quotes converted to single quotes.  Any given tag will show up
+at most once in the output string.
+
+=item B<join_quoted_tags>(@tags)
+
+As L</join_tags>, but every tag will be delimited by wither single or
+double quotes -- unlike L</join_tags>, which only quotes when
+necessary.
 
 =back
 
@@ -181,23 +205,23 @@ L<http://rt.cpan.org>.
 
 =head1 SEE ALSO
 
-L<Text::Folksonomies>, a module with similar functionality
-but has much more simplistic quote handling.  (Specifically, it doesn't
-allow you to put any type of quote into a tag.)  But if you don't care
-about that sort of support, it seems to work fine.
+L<Text::Folksonomies>, a module with similar functionality but has
+much more simplistic quote handling.  (Specifically, it doesn't allow
+you to put any type of quote into a tag.)  But if you don't care about
+that sort of support, it seems to work fine.
 
 
 =head1 AUTHOR
 
 David Glasser  C<< <glasser@bestpractical.com> >>
 
-
 =head1 LICENCE AND COPYRIGHT
 
-Copyright (c) 2005, Best Practical Solutions, LLC.  All rights reserved.
+Copyright (c) 2005, Best Practical Solutions, LLC.  All rights
+reserved.
 
-This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself. See L<perlartistic>.
+This module is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself. See L<perlartistic>.
 
 
 =head1 DISCLAIMER OF WARRANTY
