@@ -12,6 +12,8 @@ sub parse_tags {
     my $self   = shift;
     my $string = shift;
 
+    return unless defined $string;
+
     my @tags;
     my %seen;
 

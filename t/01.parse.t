@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 56;
+use Test::More tests => 57;
 
 BEGIN { use_ok 'Text::Tags::Parser' }
 
@@ -68,3 +68,4 @@ p(q{ a ,b } => qw/a b/);
 p(q{ " a, b"} => 'a, b');
 p(qq{ "   a   ,    \tb" c}, "a , b", "c");
 
+ok((not defined $parser->parse_tags(undef)), "parsing undef should return undef");
